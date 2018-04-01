@@ -1,2 +1,3 @@
 falcon
+git+https://github.com/florimondmanca/falcon-jsonify.git
 gunicorn

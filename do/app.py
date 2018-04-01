@@ -1,12 +1,11 @@
 """Do REST API application."""
 
-import json
 from datetime import datetime, timedelta
 
 import falcon
+import falcon_jsonify
 
-from .middleware import CORS
-from .middleware import ResponseLoggerMiddleware
+from .middleware import CORS, ResponseLoggerMiddleware
 
 response_logger = ResponseLoggerMiddleware()
 logger = response_logger.logger
@@ -16,7 +15,7 @@ LISTS = [
     {
         'id': 1,
         'title': 'Shopping',
-        'tasks': [1, 2, 3]
+        'tasks': [0, 1, 2]
     },
     {
         'id': 2,
@@ -27,7 +26,7 @@ LISTS = [
 
 TASKS = [
     {
-        'id': 1,
+        'id': 0,
         'list_id': 1,
         'title': 'Buy grosseries',
         'due_date': falcon.dt_to_http(
@@ -36,7 +35,7 @@ TASKS = [
         'priority': 2,
     },
     {
-        'id': 2,
+        'id': 1,
         'list_id': 1,
         'title': 'Have a nap',
         'due_date': falcon.dt_to_http(
@@ -45,7 +44,7 @@ TASKS = [
         'priority': 0,
     },
     {
-        'id': 3,
+        'id': 2,
         'list_id': 1,
         'title': 'Make a sandwich',
         'completed': False,
@@ -55,86 +54,165 @@ TASKS = [
 
 
 def find_or_404(collection, **kwargs):
+    """Find an item matching criteria in a collection, or faise a 404 error."""
     for item in collection:
         if all(item[k] == v for k, v in kwargs.items()):
             return item
     raise falcon.HTTPNotFound()
 
 
-def read_json_or_bad_request(request):
-    try:
-        return json.load(request.bounded_stream)
-    except json.JSONDecodeError as e:
-        raise falcon.HTTPBadRequest(title='JSON is malformed',
-                                    description=e.msg)
-
-
-def check_required_or_bad_request(data: dict, required):
-    for param in required:
-        if param not in data:
-            raise falcon.HTTPMissingParam(param)
-
-
 def query(collection, **kwargs):
+    """Find all items in a collection that meet criteria.
+
+    Note: this is a generator.
+    """
     for item in collection:
         if all(item[k] == v for k, v in kwargs.items()):
             yield item
 
 
+def remove_empty(dictionnary):
+    """Remove items whose value is None in a dictionnary."""
+    return {k: v for k, v in dictionnary.items() if v is None}
+
+
 class ListResource:
+    """Manipulate lists."""
 
     def on_get(self, request, response):
+        """Retrieve all lists.
+
+        Example response:
+
+        ```
+        [
+            {
+                "title": "Shopping",
+                "id": 2
+            },
+            {
+                "title": "Trips",
+                "id": 3
+            }
+        ]
+        ```
+        """
         # TODO: retrieve from storage
         doc = [
             {
-                **{k: list_[k] for k in ('id', 'title')},
-                'url': '/lists/{}'.format(list_['id'])
+                'title': list_['title'],
+                'id': list_['id'],
             }
             for list_ in LISTS
         ]
-        response.status = falcon.HTTP_200
-        response.body = json.dumps(doc, ensure_ascii=False)
+        response.json = doc
 
 
 class ListDetailResource:
+    """Manipulate a task list."""
 
     def on_get(self, request, response, id: int):
+        """Retrieve a list and its tasks.
+
+        Example response:
+
+        ```
+        {
+            "id": 2,
+            "title": "Shopping",
+            "tasks": [
+                {
+                    "id": 1,
+                    "list_id": 2,
+                    "title": "Buy groceries",
+                    "due_date": null,
+                    "completed": false,
+                    "priority": 0
+                }
+            ]
+        }
+        ```
+        """
         doc = find_or_404(LISTS, id=id)
         doc['tasks'] = list(query(TASKS, list_id=id))
-        response.status = falcon.HTTP_200
-        response.body = json.dumps(doc, ensure_ascii=False)
+        response.json = doc
 
 
 class TaskResource:
+    """Manipulate tasks."""
 
     def on_post(self, request, response):
-        task = read_json_or_bad_request(request)
-        check_required_or_bad_request(task, ('title', 'list_id'))
+        """Create a new task.
 
+        Payload parameters:
+
+        title: str, required
+            Title of the task.
+        list_id: int, required
+            ID of the list to add this task to.
+        due_date: str, optional (default: None)
+            Date by which the task has to be done.
+            Send in ISO format.
+        completed: bool, optional (default: False)
+            Whether this task is completed.
+        Priority: int, optional (default: 0)
+            How urgent is the task. The higher the more important.
+
+        Example response:
+        ```
+        {
+            'id': 2,
+            'list_id': 2,
+            'title': 'Make a sandwich',
+            'due_date': null,
+            'completed': false,
+            priority: 0
+        }
+        ```
+        """
+        task = {
+            'title': request.get_json('title'),
+            'list_id': request.get_json('list_id'),
+            'due_date': request.get_json('due_date', default=None),
+            'completed': request.get_json('completed', dtype=bool,
+                                          default=False),
+            'priority': request.get_json('priority', dtype=int, default=0),
+        }
+        # Add the task to a list
         list_ = find_or_404(LISTS, id=task['list_id'])
-
         task['id'] = len(list_['tasks'])
-        task.setdefault('due_date', None)
-        task.setdefault('completed', False)
-        task.setdefault('priority', 0)
 
         TASKS.append(task)
         list_['tasks'].append(task['id'])
 
-        logger.info(str(task))
         response.status = falcon.HTTP_201
-        response.body = json.dumps(task, ensure_ascii=False)
+        response.json = task
 
 
 class TaskDetailResource:
+    """Manipulate a task."""
 
-    def on_put(self, request, response, id: int):
-        updated_task = read_json_or_bad_request(request)
-        check_required_or_bad_request(updated_task, ('list_id',))
-        list_id = updated_task['list_id']
-        task = find_or_404(TASKS, id=id, list_id=list_id)
-        task.update(updated_task)
+    def on_patch(self, request, response, id: int):
+        """Update a task.
 
+        The following fields can be passed in the payload to be updated:
+            title, due_date, completed, priority
+        Any other field will be ignored.
+
+        Example payload:
+        ```
+        {
+            "completed": true
+        }
+        ```
+
+        Example response: no response body.
+        """
+        task = find_or_404(TASKS, id=id)
+        updatable = ('title', 'due_date', 'completed', 'priority')
+        updated_fields = {param: request.json.pop(param, None)
+                          for param in updatable}
+        task.update(**updated_fields)
         response.status = falcon.HTTP_200
 
 
@@ -145,6 +223,7 @@ app = falcon.API(middleware=[
         allowed_headers=['content-type'],
     ).middleware,
     response_logger,
+    falcon_jsonify.Middleware(help_messages=True),
 ])
 
 # Resources and routes
