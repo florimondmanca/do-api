@@ -19,6 +19,11 @@ class ResponseLoggerMiddleware:
             logger = default_logger
         self.logger = logger
 
+    def process_resource(self, req, resp, resource, params):
+        """Make logger available to resource classes."""
+        resource.logger = self.logger
+
     def process_response(self, req, resp, resource, req_succeeded):
+        """Output request and response info to logger."""
         self.logger.info(f'"{req.scheme} {req.method} \
 {req.relative_uri}" {resp.status[:3]} "{req.host}" "{req.user_agent}"')

@@ -4,5 +4,5 @@ if __name__ == '__main__':
     run([
         'gunicorn',
         '--reload',
-        'do.app',
+        'do.wsgi',
     ])
