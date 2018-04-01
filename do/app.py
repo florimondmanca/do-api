@@ -73,7 +73,7 @@ def query(collection, **kwargs):
 
 def remove_empty(dictionnary):
     """Remove items whose value is None in a dictionnary."""
-    return {k: v for k, v in dictionnary.items() if v is None}
+    return {k: v for k, v in dictionnary.items() if v is not None}
 
 
 class ListResource:
@@ -210,8 +210,9 @@ class TaskDetailResource:
         """
         task = find_or_404(TASKS, id=id)
         updatable = ('title', 'due_date', 'completed', 'priority')
-        updated_fields = {param: request.json.pop(param, None)
-                          for param in updatable}
+        updated_fields = remove_empty({
+            param: request.json.pop(param, None) for param in updatable
+        })
         task.update(**updated_fields)
         response.status = falcon.HTTP_200
 
