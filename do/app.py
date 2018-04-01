@@ -53,10 +53,27 @@ TASKS = [
 ]
 
 
-def find_or_404(collection, **kwargs):
-    """Find an item matching criteria in a collection, or faise a 404 error."""
-    for item in collection:
+def find_or_404(collection, index=False, **kwargs):
+    """Find an item matching criteria in a collection, or faise a 404 error.
+
+    Parameters
+    ----------
+    collection : iterable
+    index : boolean, optional (default: False)
+        Determines what is returned by this function.
+    **kwargs : dict
+        Key-value pairs to filter through the collection and find the item.
+
+    Returns
+    -------
+    item : object or int
+        If index=True, returns the position of the item in the collection,
+        otherwise returns the item object itself.
+    """
+    for i, item in enumerate(collection):
         if all(item[k] == v for k, v in kwargs.items()):
+            if index:
+                return i
             return item
     raise falcon.HTTPNotFound()
 
@@ -215,6 +232,13 @@ class TaskDetailResource:
         })
         task.update(**updated_fields)
         response.status = falcon.HTTP_200
+
+    def on_delete(self, request, response, id: int):
+        """Delete a task."""
+        task_index = find_or_404(TASKS, index=True, id=id)
+        print(task_index)
+        TASKS.pop(task_index)
+        response.status = falcon.HTTP_204
 
 
 app = falcon.API(middleware=[
