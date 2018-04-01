@@ -1,9 +1,10 @@
 """API resources definitions."""
 
+from pprint import pprint
 import falcon
 from db import Database as db
 from db import List, Task
-from utils import find_or_404, query, remove_empty
+from utils import find_or_404, find_maybe, query, remove_empty
 
 
 class ListResource:
@@ -27,11 +28,36 @@ class ListResource:
         ]
         ```
         """
-        # TODO: retrieve from storage
-        lists = self.session.query(List).all()
-        json = [list.serialized for list in lists]
-        print(json)
+        lists = []
+        for list_ in db.lists:
+            lists.append({
+                'title': list_['title'],
+                'id': list_['id'],
+                'tasks': list(query(db.tasks, list_id=list_['id'])),
+            })
+        json = lists
+        # lists = self.session.query(List).all()
+        # json = [list.serialized for list in lists]
         response.json = json
+
+    def on_post(self, request, response):
+        """Create a new list.
+
+        Payload parameters:
+
+        - title: str, required
+            Title of the list.
+        """
+        list_ = {
+            'title': request.get_json('title'),
+        }
+        list_['id'] = len(db.lists)
+        list_['tasks'] = []
+
+        db.lists.append(list_)
+
+        response.status = falcon.HTTP_201
+        response.json = list_
 
 
 class ListDetailResource:
@@ -59,9 +85,22 @@ class ListDetailResource:
         }
         ```
         """
-        doc = find_or_404(db.lists, id=id)
+        doc = find_or_404(db.lists, id=id).copy()
         doc['tasks'] = list(query(db.tasks, list_id=id))
         response.json = doc
+
+    def on_delete(self, request, response, id):
+        """Delete a list."""
+        index, list_ = find_or_404(db.lists, with_index=True, id=id)
+
+        # Remove associated tasks
+        for task_id in list_['tasks']:
+            task_index = find_maybe(db.tasks, index=True, id=task_id)
+            if task_index is not None:
+                db.tasks.pop(task_index)
+
+        db.lists.pop(index)
+        response.status_code = falcon.HTTP_204
 
 
 class TaskResource:
@@ -144,7 +183,11 @@ class TaskDetailResource:
 
     def on_delete(self, request, response, id: int):
         """Delete a task."""
-        task_index = find_or_404(db.tasks, index=True, id=id)
-        print(task_index)
-        db.tasks.pop(task_index)
+        index, task = find_or_404(db.tasks, with_index=True, id=id)
+
+        # Remove the task from its list
+        list_ = find_maybe(db.lists, id=task['list_id'])
+        list_['tasks'].remove(task['id'])
+
+        db.tasks.pop(index)
         response.status = falcon.HTTP_204

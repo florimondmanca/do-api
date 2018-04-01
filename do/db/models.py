@@ -1,8 +1,7 @@
 """Database definition and setup."""
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy.orm import relationship
 from sqlalchemy import Column, String, Integer, ForeignKey, TIMESTAMP, Boolean
 
 
@@ -58,17 +57,3 @@ class Task(Base):
             'completed': self.completed,
             'priority': self.priority,
         }
-
-
-def create_tables():
-    """Utility function to create database tables."""
-    engine = create_engine(DB_NAME)
-    Base.metadata.create_all(engine)
-    print('Created database tables in {}'.format(DB_NAME))
-
-
-def get_session_factory():
-    """Create and return a session factory."""
-    engine = create_engine(DB_NAME)
-    Base.metadata.bind = engine
-    return sessionmaker(bind=engine)

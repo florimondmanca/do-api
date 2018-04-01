@@ -15,16 +15,12 @@ def cli():
 @cli.command()
 def start():
     """Start the server."""
-    run([
-        'gunicorn',
-        '--reload',
-        'wsgi',
-    ])
+    run(['gunicorn', '--reload','wsgi'])
 
 
 @cli.command()
 def initdb():
-    """Setup the database."""
+    """Initialize the database."""
     create_tables()
 
 

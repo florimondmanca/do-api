@@ -1,2 +1,3 @@
 from .mock import Database
-from .sqlalchemy import Base, Task, List, DB_NAME, create_tables, get_session_factory
+from .models import Base, Task, List
+from .utils import create_tables, get_session_factory

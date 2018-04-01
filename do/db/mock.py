@@ -4,21 +4,21 @@ import falcon
 
 LISTS = [
     {
-        'id': 1,
+        'id': 0,
         'title': 'Shopping',
-        'tasks': [0, 1, 2]
+        'tasks': [0, 1]
     },
     {
-        'id': 2,
+        'id': 1,
         'title': 'Trips',
-        'tasks': []
+        'tasks': [2]
     }
 ]
 
 TASKS = [
     {
         'id': 0,
-        'list_id': 1,
+        'list_id': 0,
         'title': 'Buy grosseries',
         'due_date': falcon.dt_to_http(
             datetime.now() + timedelta(days=1)),
@@ -27,7 +27,7 @@ TASKS = [
     },
     {
         'id': 1,
-        'list_id': 1,
+        'list_id': 0,
         'title': 'Have a nap',
         'due_date': falcon.dt_to_http(
             datetime.now() - timedelta(hours=1)),
