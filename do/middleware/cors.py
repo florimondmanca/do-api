@@ -51,8 +51,7 @@ class CORS:
         self.allowed_methods = [method.upper()
                                 for method in self.allowed_methods]
 
-    @property
-    def middleware(self):
+    def Middleware(self):
         """Build and return a CorsMiddleware object."""
         return CorsMiddleware(cors=self)
 
@@ -61,9 +60,8 @@ class CORS:
         self._process_method(req, resp, method)
 
         origin = req.get_header(ORIGIN_HEADER)
-        if not origin:
-            raise falcon.HTTPBadRequest(title='Origin header must be set')
-        self._process_origin(req, resp, origin)
+        if origin:
+            self._process_origin(req, resp, origin)
 
         request_headers = req.get_header(REQUEST_HEADERS_HEADER)
         if request_headers:

@@ -1,9 +1,9 @@
 """API resources definitions."""
 
 import falcon
-
-from .db import Database as db
-from .utils import find_or_404, query, remove_empty
+from db import Database as db
+from db import List, Task
+from utils import find_or_404, query, remove_empty
 
 
 class ListResource:
@@ -28,14 +28,10 @@ class ListResource:
         ```
         """
         # TODO: retrieve from storage
-        doc = [
-            {
-                'title': list_['title'],
-                'id': list_['id'],
-            }
-            for list_ in db.lists
-        ]
-        response.json = doc
+        lists = self.session.query(List).all()
+        json = [list.serialized for list in lists]
+        print(json)
+        response.json = json
 
 
 class ListDetailResource:
