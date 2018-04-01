@@ -137,11 +137,10 @@ class TaskDetailResource:
         """
         task = find_or_404(db.tasks, id=id)
         updated_fields = {
-            'title': request.get_json('title', dtype=int, default=None),
-            'due_date': request.get_json('due_date', dtype=str, default=None),
-            'completed': request.get_json('completed', dtype=bool,
-                                          default=None),
-            'priority': request.get_json('priority', dtype=int, default=None),
+            'title': request.get_json('title', default=None),
+            'due_date': request.get_json('due_date', default=None),
+            'completed': request.get_json('completed', default=None),
+            'priority': request.get_json('priority', default=None),
         }
         cleaned_fields = remove_empty(updated_fields)
         task.update(**cleaned_fields)
