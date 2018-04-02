@@ -6,3 +6,8 @@ virtualenv/
 # Compiled files
 *.pyc
 __pycache__/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
