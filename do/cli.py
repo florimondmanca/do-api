@@ -1,22 +1,20 @@
 #! /usr/bin/env python3
 """Do API management CLI."""
 
-import os
-from subprocess import run, CompletedProcess
+from subprocess import run
 
 import click
 
-from db import settings
+from helpers import load_settings
+from helpers.db import (apply_migrations, create_migrations, db_exists,
+                        delete_database)
+from helpers.shell import success
+
+settings = load_settings()
+
 
 # Commands
-ALEMBIC_UPGRADE_HEAD = ['alembic', 'upgrade', 'head']
-ALEMBIC_GENERATE = ['alembic', 'revision', '--autogenerate']
 GUNICORN = ['gunicorn', '--reload', 'wsgi']
-
-
-def success(cmd: CompletedProcess):
-    """Return whether a process successfully terminated."""
-    return cmd.returncode == 0
 
 
 @click.group()
@@ -33,7 +31,10 @@ def start():
 @cli.command()
 def initdb():
     """Initialize the database."""
-    if success(run(ALEMBIC_UPGRADE_HEAD)):
+    name = settings.DATABASE_NAME
+    if db_exists(name):
+        raise click.UsageError('Database {} already exists.'.format(name))
+    if apply_migrations():
         print('OK')
 
 
@@ -41,15 +42,14 @@ def initdb():
 @click.argument('message')
 def makemigrations(message: str):
     """Generate migrations with Alembic."""
-    message_opts = message and ['-m', message] or []
-    if success(run([*ALEMBIC_GENERATE, *message_opts])):
+    if create_migrations(message):
         print('OK')
 
 
 @cli.command()
 def migrate():
     """Run migrations using `alembic upgrade head`."""
-    if success(run(ALEMBIC_UPGRADE_HEAD)):
+    if apply_migrations():
         print('OK')
 
 
@@ -57,11 +57,11 @@ def migrate():
 def rmdb():
     """Delete the database altogether."""
     name = settings.DATABASE_NAME
-    if os.path.exists(name):
+    if db_exists(name):
         click.confirm(
             'This will erase the database permanently. Continue?',
             abort=True)
-        if success(run(['rm', name])):
+        if delete_database(name):
             print('Removed database {}'.format(name))
     else:
         print('No database found.')

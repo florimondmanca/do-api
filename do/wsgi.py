@@ -1,4 +1,4 @@
-from app import get_app
+"""WSGI application declaration."""
+import app
 
-# WSGI application
-application = get_app()
+application = app.create(settings_module_name='settings.prod')

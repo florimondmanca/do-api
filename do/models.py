@@ -6,7 +6,6 @@ from sqlalchemy import Column, String, Integer, ForeignKey, TIMESTAMP, Boolean
 
 
 Base = declarative_base()
-DB_NAME = 'sqlite:///do.db'
 
 
 class List(Base):

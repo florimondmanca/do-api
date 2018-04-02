@@ -3,9 +3,11 @@ env/
 venv/
 virtualenv/
 
-# Compiled files
+# Compiled files & cache
 *.pyc
 __pycache__/
+.pytest_cache/
+.cache/
 
 # Databases
 *.db

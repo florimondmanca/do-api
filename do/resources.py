@@ -1,7 +1,7 @@
 """API resources definitions."""
 
 import falcon
-from db import List, Task
+from models import List, Task
 from utils import remove_empty, get_or_404
 
 

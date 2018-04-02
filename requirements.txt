@@ -3,3 +3,4 @@ git+https://github.com/florimondmanca/falcon-jsonify.git
 sqlalchemy
 gunicorn
 click
+pytest
