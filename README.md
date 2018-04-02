@@ -2,7 +2,9 @@
 
 This is the backend API for the Do project.
 
-Made with [Falcon](https://falcon.readthedocs.io/en/stable/). Uses the [SQLAlchemy](http://www.sqlalchemy.org) ORM and [Alembic](http://alembic.zzzcomputing.com) for database migrations. The management CLI is written with [click](http://click.pocoo.org/5/) and tests are written with [pytest](https://docs.pytest.org/en/latest/contents.html).
+To see what the frontend looks like, see the [do](https://github.com/florimondmanca/do) repo.
+
+Made with [Falcon](https://falcon.readthedocs.io/en/stable/). Uses the [SQLAlchemy](http://www.sqlalchemy.org) ORM, [Alembic](http://alembic.zzzcomputing.com) for database migrations, [click](http://click.pocoo.org/5/) for the management CLI and [pytest](https://docs.pytest.org/en/latest/contents.html) for testing.
 
 ## Installation
 
