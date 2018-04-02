@@ -1,3 +1,8 @@
+# Virtual environments
 env/
+venv/
+virtualenv/
+
+# Compiled files
 *.pyc
 __pycache__/

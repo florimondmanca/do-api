@@ -19,3 +19,9 @@ def get_session_factory():
     engine = create_engine(DATABASE_URL)
     Base.metadata.bind = engine
     return sessionmaker(bind=engine)
+
+
+def get_session():
+    """Convenience shortcut to create and return a database session."""
+    factory = get_session_factory()
+    return factory()

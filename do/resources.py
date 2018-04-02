@@ -1,10 +1,8 @@
 """API resources definitions."""
 
-from pprint import pprint
 import falcon
-from db import Database as db
 from db import List, Task
-from utils import find_or_404, find_maybe, query, remove_empty
+from utils import remove_empty, get_object
 
 
 class ListResource:
@@ -28,16 +26,8 @@ class ListResource:
         ]
         ```
         """
-        lists = []
-        for list_ in db.lists:
-            lists.append({
-                'title': list_['title'],
-                'id': list_['id'],
-                'tasks': list(query(db.tasks, list_id=list_['id'])),
-            })
-        json = lists
-        # lists = self.session.query(List).all()
-        # json = [list.serialized for list in lists]
+        lists = self.session.query(List).all()
+        json = [list.serialized_simple for list in lists]
         response.json = json
 
     def on_post(self, request, response):
@@ -48,20 +38,19 @@ class ListResource:
         - title: str, required
             Title of the list.
         """
-        list_ = {
-            'title': request.get_json('title'),
-        }
-        list_['id'] = len(db.lists)
-        list_['tasks'] = []
-
-        db.lists.append(list_)
-
+        title = request.get_json('title', dtype=str)
+        list_ = List(title=title)
+        self.session.add(list_)
+        self.session.commit()
         response.status = falcon.HTTP_201
-        response.json = list_
+        response.json = list_.serialized
 
 
 class ListDetailResource:
     """Manipulate a task list."""
+
+    def get_object(self, id) -> List:
+        return get_object(self.session, List, id=id)
 
     def on_get(self, request, response, id: int):
         """Retrieve a list and its tasks.
@@ -85,21 +74,14 @@ class ListDetailResource:
         }
         ```
         """
-        doc = find_or_404(db.lists, id=id).copy()
-        doc['tasks'] = list(query(db.tasks, list_id=id))
-        response.json = doc
+        list_ = self.get_object(id)
+        response.json = list_.serialized
 
     def on_delete(self, request, response, id):
         """Delete a list."""
-        index, list_ = find_or_404(db.lists, with_index=True, id=id)
-
-        # Remove associated tasks
-        for task_id in list_['tasks']:
-            task_index = find_maybe(db.tasks, index=True, id=task_id)
-            if task_index is not None:
-                db.tasks.pop(task_index)
-
-        db.lists.pop(index)
+        list_ = self.get_object(id)
+        self.session.delete(list_)
+        self.session.commit()
         response.status_code = falcon.HTTP_204
 
 
@@ -135,27 +117,33 @@ class TaskResource:
         }
         ```
         """
-        task = {
-            'title': request.get_json('title'),
-            'list_id': request.get_json('list_id'),
-            'due_date': request.get_json('due_date', default=None),
-            'completed': request.get_json('completed', dtype=bool,
-                                          default=False),
-            'priority': request.get_json('priority', dtype=int, default=0),
-        }
-        # Add the task to a list
-        list_ = find_or_404(db.lists, id=task['list_id'])
-        task['id'] = len(list_['tasks'])
+        title = request.get_json('title')
+        list_id = request.get_json('list_id')
+        due_date = request.get_json('due_date', default=None)
+        completed = request.get_json('completed', dtype=bool, default=False)
+        priority = request.get_json('priority', dtype=int, default=0)
 
-        db.tasks.append(task)
-        list_['tasks'].append(task['id'])
+        list_ = get_object(self.session, List, id=list_id)
+
+        task = Task(
+            title=title,
+            list=list_,
+            due_date=due_date,
+            completed=completed,
+            priority=priority)
+
+        self.session.add(task)
+        self.session.commit()
 
         response.status = falcon.HTTP_201
-        response.json = task
+        response.json = task.serialized
 
 
 class TaskDetailResource:
     """Manipulate a task."""
+
+    def get_object(self, id) -> Task:
+        return get_object(self.session, Task, id=id)
 
     def on_patch(self, request, response, id: int):
         """(Partially) update a task.
@@ -170,7 +158,7 @@ class TaskDetailResource:
         - completed: bool
         - priority: int
         """
-        task = find_or_404(db.tasks, id=id)
+        task = self.get_object(id)
         updated_fields = {
             'title': request.get_json('title', default=None),
             'due_date': request.get_json('due_date', default=None),
@@ -178,16 +166,16 @@ class TaskDetailResource:
             'priority': request.get_json('priority', default=None),
         }
         cleaned_fields = remove_empty(updated_fields)
-        task.update(**cleaned_fields)
+        if cleaned_fields:
+            for field, value in cleaned_fields.items():
+                setattr(task, field, value)
+            self.session.add(task)
+            self.session.commit()
         response.status = falcon.HTTP_200
 
     def on_delete(self, request, response, id: int):
         """Delete a task."""
-        index, task = find_or_404(db.tasks, with_index=True, id=id)
-
-        # Remove the task from its list
-        list_ = find_maybe(db.lists, id=task['list_id'])
-        list_['tasks'].remove(task['id'])
-
-        db.tasks.pop(index)
+        task = self.get_object(id)
+        self.session.delete(task)
+        self.session.commit()
         response.status = falcon.HTTP_204
