@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 """Do API management CLI."""
 
 from subprocess import run

@@ -2,7 +2,7 @@
 
 import falcon
 from db import List, Task
-from utils import remove_empty, get_object
+from utils import remove_empty, get_or_404
 
 
 class ListResource:
@@ -50,7 +50,7 @@ class ListDetailResource:
     """Manipulate a task list."""
 
     def get_object(self, id) -> List:
-        return get_object(self.session, List, id=id)
+        return get_or_404(self.session, List, id=id)
 
     def on_get(self, request, response, id: int):
         """Retrieve a list and its tasks.
@@ -123,7 +123,7 @@ class TaskResource:
         completed = request.get_json('completed', dtype=bool, default=False)
         priority = request.get_json('priority', dtype=int, default=0)
 
-        list_ = get_object(self.session, List, id=list_id)
+        list_ = get_or_404(self.session, List, id=list_id)
 
         task = Task(
             title=title,
@@ -143,7 +143,7 @@ class TaskDetailResource:
     """Manipulate a task."""
 
     def get_object(self, id) -> Task:
-        return get_object(self.session, Task, id=id)
+        return get_or_404(self.session, Task, id=id)
 
     def on_patch(self, request, response, id: int):
         """(Partially) update a task.
