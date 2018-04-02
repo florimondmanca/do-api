@@ -2,10 +2,11 @@
 
 This is the backend API for the Do project.
 
+Made with [Falcon](https://falcon.readthedocs.io/en/stable/), the [SQLAlchemy](http://www.sqlalchemy.org) ORM and [Alembic](http://alembic.zzzcomputing.com) for database migrations. Management CLI written with [Click](http://click.pocoo.org/5/).
+
 ## Installation
 
-- Make sure you have **Python 3.3+** installed.
-- Create a virtual environment and install dependencies:
+Make sure you have **Python 3.3+** installed, then create a virtual environment and install dependencies:
 
 ```bash
 $ python3 -m venv env
@@ -50,5 +51,9 @@ Commands:
 - `rmdb`: delete the database.
 
 ## Resources documentation
+
+> TODO
+
+## Running tests
 
 > TODO
