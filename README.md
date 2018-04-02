@@ -13,20 +13,42 @@ $ . env/bin/activate
 $ pip install -r requirements.txt
 ```
 
-- Start the app using Gunicorn (`--reload` enables hot reload of the app on code changes):
+## Quick start
+
+After installing, setup the database:
 
 ```bash
-$ ./env/bin/gunicorn --reload do.app
+$ cd do/
+$ ./cli.py initdb
+$ ./cli.py migrate
 ```
 
-## Resources documentation (WIP)
+then start the Gunicorn server:
 
-### Tasks
+```bash
+$ ./cli.py start
+```
 
-#### `GET /tasks`
+## Using the CLI
 
-Return all the available tasks.
+The `cli.py` script provides a few management commands. Make sure to always execute it in the project's root directory as `$ ./cli.py [...]`.
 
-#### `GET /tasks/:id`
+Commands:
 
-Return a task identified by its `id`.
+- `--help`: show the entry point's documentation.
+
+- `<COMMAND> --help`: show help about a command.
+
+- `start`: start the app server.
+
+- `initdb`: initialize the database. This creates a SQLite database file and runs an initial migration to get it up to date.
+
+- `makemigrations MESSAGE`: autogenerate a new migration. A descriptive message must be provided.
+
+- `migrate`: upgrade the database using the migrations found in `migrations/versions/`.
+
+- `rmdb`: delete the database.
+
+## Resources documentation
+
+> TODO

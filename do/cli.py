@@ -62,9 +62,9 @@ def rmdb():
             'This will erase the database permanently. Continue?',
             abort=True)
         if success(run(['rm', name])):
-            print(f'Removed database {name}')
+            print('Removed database {}'.format(name))
     else:
-        print(f'No database found.')
+        print('No database found.')
 
 
 if __name__ == '__main__':
