@@ -16,6 +16,7 @@ class List(Base):
     title = Column(String(250), nullable=False)
     # cascade='all': list deleted => tasks deleted
     tasks = relationship('Task', cascade='all')
+    archived = Column(Boolean, nullable=False, default=False)
 
     @property
     def serialized(self):
@@ -29,6 +30,7 @@ class List(Base):
         return {
             'id': self.id,
             'title': self.title,
+            'archived': self.archived,
         }
 
 

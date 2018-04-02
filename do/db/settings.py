@@ -1,3 +1,4 @@
 """Database settings."""
 
-DATABASE_URL = 'sqlite:///do.db'
+DATABASE_NAME = 'do.db'
+DATABASE_URL = f'sqlite:///{DATABASE_NAME}'
