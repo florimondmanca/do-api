@@ -2,7 +2,7 @@
 
 This is the backend API for the Do project.
 
-Made with [Falcon](https://falcon.readthedocs.io/en/stable/), the [SQLAlchemy](http://www.sqlalchemy.org) ORM and [Alembic](http://alembic.zzzcomputing.com) for database migrations. Management CLI written with [Click](http://click.pocoo.org/5/).
+Made with [Falcon](https://falcon.readthedocs.io/en/stable/), the [SQLAlchemy](http://www.sqlalchemy.org) ORM and [Alembic](http://alembic.zzzcomputing.com) for database migrations. The management CLI is written with [Click](http://click.pocoo.org/5/) and tests are written with .
 
 ## Installation
 
@@ -21,7 +21,6 @@ After installing, setup the database:
 ```bash
 $ cd do/
 $ ./cli.py initdb
-$ ./cli.py migrate
 ```
 
 then start the Gunicorn server:
@@ -38,22 +37,35 @@ Commands:
 
 - `--help`: show the entry point's documentation.
 
-- `<COMMAND> --help`: show help about a command.
+- `<COMMAND> --help`: show help details about a command.
 
 - `start`: start the app server.
 
-- `initdb`: initialize the database. This creates a SQLite database file and runs an initial migration to get it up to date.
+- `initdb`: initialize the database. This wrapper around `migrate` first checks that no database already exists.
 
 - `makemigrations MESSAGE`: autogenerate a new migration. A descriptive message must be provided.
 
-- `migrate`: upgrade the database using the migrations found in `migrations/versions/`.
+- `migrate`: upgrade the database using the migrations found in `migrations/versions/`. Note that if no database exists, it will create one.
 
-- `rmdb`: delete the database.
+- `rmdb`: delete the database (if one exists).
 
-## Resources documentation
+- `test`: run the tests. This will create a test database and will not affect any database previously created.
+
+## API documentation
 
 > TODO
 
 ## Running tests
 
-> TODO
+You can run the tests from the CLI:
+
+```bash
+$ cd do/
+$ ./cli.py test
+```
+
+For finer control, you may want to use `pytest` directly. For example, to not capture output (and pipe it to the console):
+
+```bash
+$ python -m test -s
+```

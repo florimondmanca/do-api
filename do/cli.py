@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 """Do API management CLI."""
 
+import os
 from subprocess import run
 
 import click
@@ -10,10 +11,10 @@ from helpers.db import (apply_migrations, create_migrations, db_exists,
                         delete_database)
 from helpers.shell import success
 
+os.environ.setdefault('SETTINGS_MODULE', 'settings')
 settings = load_settings()
 
-
-# Commands
+OK = click.style('OK', fg='green')
 GUNICORN = ['gunicorn', '--reload', 'wsgi']
 
 
@@ -30,12 +31,14 @@ def start():
 
 @cli.command()
 def initdb():
-    """Initialize the database."""
+    """Create a database and apply migrations on it."""
     name = settings.DATABASE_NAME
     if db_exists(name):
-        raise click.UsageError('Database {} already exists.'.format(name))
+        raise click.UsageError(
+            click.style('Database {} already exists.'.format(name), fg='red')
+        )
     if apply_migrations():
-        print('OK')
+        click.echo(OK)
 
 
 @cli.command()
@@ -43,14 +46,14 @@ def initdb():
 def makemigrations(message: str):
     """Generate migrations with Alembic."""
     if create_migrations(message):
-        print('OK')
+        click.echo(OK)
 
 
 @cli.command()
 def migrate():
     """Run migrations using `alembic upgrade head`."""
     if apply_migrations():
-        print('OK')
+        click.echo(OK)
 
 
 @cli.command()
@@ -62,9 +65,18 @@ def rmdb():
             'This will erase the database permanently. Continue?',
             abort=True)
         if delete_database(name):
-            print('Removed database {}'.format(name))
+            click.secho('Removed database {}'.format(name), fg='green')
     else:
-        print('No database found.')
+        click.secho('No database found.', fg='red')
+
+
+@cli.command()
+@click.option('--verbose', '-v', is_flag=True, help='Turn verbosity up')
+def test(verbose):
+    """Run the tests."""
+    verbose_opts = verbose and ['-v'] or []
+    if success(['python', '-m', 'pytest', *verbose_opts]):
+        click.secho('Tests passed! 🎉', fg='green')
 
 
 if __name__ == '__main__':

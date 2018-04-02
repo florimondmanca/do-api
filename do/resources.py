@@ -1,8 +1,22 @@
 """API resources definitions."""
 
 import falcon
+import dateutil.parser
 from models import List, Task
 from utils import remove_empty, get_or_404
+
+
+def read_datetime(raw_datetime: str):
+    """Read an ISO datetime and return None of the datetime object.
+
+    If a parsing error occurs, raises a 400 error.
+    """
+    if raw_datetime:
+        try:
+            return dateutil.parser.parse(raw_datetime)
+        except ValueError as e:
+            raise falcon.HTTPBadRequest(description=str(e))
+    return None
 
 
 class ListResource:
@@ -49,7 +63,7 @@ class ListResource:
 class ListDetailResource:
     """Manipulate a task list."""
 
-    def get_object(self, id) -> List:
+    def get_object(self, id: int) -> List:
         return get_or_404(self.session, List, id=id)
 
     def on_get(self, request, response, id: int):
@@ -82,7 +96,7 @@ class ListDetailResource:
         list_ = self.get_object(id)
         self.session.delete(list_)
         self.session.commit()
-        response.status_code = falcon.HTTP_204
+        response.status = falcon.HTTP_204
 
 
 class TaskResource:
@@ -97,9 +111,8 @@ class TaskResource:
             Title of the task.
         list_id: int, required
             ID of the list to add this task to.
-        due_date: str, optional (default: None)
-            Date by which the task has to be done.
-            Send in ISO format.
+        due_date: str, optional (default: '')
+            ISO date-time by which the task has to be done.
         completed: bool, optional (default: False)
             Whether this task is completed.
         Priority: int, optional (default: 0)
@@ -123,6 +136,8 @@ class TaskResource:
         completed = request.get_json('completed', dtype=bool, default=False)
         priority = request.get_json('priority', dtype=int, default=0)
 
+        due_date = read_datetime(due_date)
+
         list_ = get_or_404(self.session, List, id=list_id)
 
         task = Task(
@@ -142,7 +157,7 @@ class TaskResource:
 class TaskDetailResource:
     """Manipulate a task."""
 
-    def get_object(self, id) -> Task:
+    def get_object(self, id: int) -> Task:
         return get_or_404(self.session, Task, id=id)
 
     def on_patch(self, request, response, id: int):
@@ -159,19 +174,27 @@ class TaskDetailResource:
         - priority: int
         """
         task = self.get_object(id)
+
+        due_date = request.get_json('due_date', default=None)
+        due_date = read_datetime(due_date)
+
         updated_fields = {
             'title': request.get_json('title', default=None),
-            'due_date': request.get_json('due_date', default=None),
+            'due_date': due_date,
             'completed': request.get_json('completed', default=None),
             'priority': request.get_json('priority', default=None),
         }
+
         cleaned_fields = remove_empty(updated_fields)
+
         if cleaned_fields:
             for field, value in cleaned_fields.items():
                 setattr(task, field, value)
             self.session.add(task)
             self.session.commit()
+
         response.status = falcon.HTTP_200
+        response.json = task.serialized
 
     def on_delete(self, request, response, id: int):
         """Delete a task."""
