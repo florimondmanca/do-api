@@ -2,7 +2,7 @@
 
 This is the backend API for the Do project.
 
-Made with [Falcon](https://falcon.readthedocs.io/en/stable/), the [SQLAlchemy](http://www.sqlalchemy.org) ORM and [Alembic](http://alembic.zzzcomputing.com) for database migrations. The management CLI is written with [Click](http://click.pocoo.org/5/) and tests are written with .
+Made with [Falcon](https://falcon.readthedocs.io/en/stable/). Uses the [SQLAlchemy](http://www.sqlalchemy.org) ORM and [Alembic](http://alembic.zzzcomputing.com) for database migrations. The management CLI is written with [click](http://click.pocoo.org/5/) and tests are written with [pytest](https://docs.pytest.org/en/latest/contents.html).
 
 ## Installation
 
@@ -31,7 +31,7 @@ $ ./cli.py start
 
 ## Using the CLI
 
-The `cli.py` script provides a few management commands. Make sure to always execute it in the project's root directory as `$ ./cli.py [...]`.
+The `cli.py` script provides a few management commands. You can execute it while in the project's root directory using `$ python cli.py ...` or simply `$ ./cli.py ...`.
 
 Commands:
 
@@ -64,8 +64,8 @@ $ cd do/
 $ ./cli.py test
 ```
 
-For finer control, you may want to use `pytest` directly. For example, to not capture output (and pipe it to the console):
+For finer control, you may want to use pytest directly. For example, to prevent pytest from capturing output:
 
 ```bash
-$ python -m test -s
+$ python -m pytest -s
 ```
