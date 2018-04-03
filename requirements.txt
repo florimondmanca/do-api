@@ -6,3 +6,4 @@ click
 pytest
 psycopg2
 sqlalchemy-utils
+alembic
