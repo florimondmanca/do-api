@@ -6,20 +6,19 @@ python:
 services:
   - postgresql
 
-before_script:
-  - cd do/
+jobs:
+  include:
 
-script:
-  # NOTE: the DATABASE_URL must be set in TravisCI environment variables
-  - python cli.py test
+  - stage: test
+    before_script: cd do/
+    script: python cli.py test
 
-before_deploy:
-  - cd .. && ls
-
-deploy:
-  provider: heroku
-  app: api-do-tasks
-  run:
-    - "python do/cli.py migrate"
-  api_key:
-    secure: tk6Pfrftlma+m6TYwl3DODf4rrtoPbvL5C94rBWEyjE3ttyitFIMqWAhG/lVR83ZmCd+sGvm250fqKes2+ZINYW92csvu9vngG4018qzDJ0agA2wOsNkn+mMih96hk+uWpRHWZ90BDG/wWcWnquSzS2fNNmdJVS5lEH4lPQBrgN0dTlHROHnFn5eJK7BR/22EOfF2wmREdMohn7QDBalju+C5ywGKNVYJ9Lhychlp/LbemrHViIXheCO3dS0Lu+AsQaH0Gh+793tmHWqRJhY4EP0IKi6xguH9/b80hkgAH8zZYo8HOXCGBUJnTNWJsf5H4Dvcoeny0p6ak/oyudwO/ZEQB0bs5MeAa5yCunEb6nCnpmPy+spvVjK3ZSGLhfetYHn44tApzFNnqOJPnHSFHy0Tbi/RDFpH6998iUWx7MbXsjsxLnj1C/c53l5xg9YxbZKp8YBNlmwMKdBaEnZEiHyVBhJG05JVnacMUAajtOisObG2yKBjcgUxNuTRIFlSj8UKKlF+wnjrRQLGHK32ISkE+g4NAePtqU5W4hjKqpMvv9uNEopkGb9XNo+9PWN168s7trKWcLIaqNykAVS/0LUYomuV2tMdIcP7biYO84r1YRmFFblTIb19vFsQNagRRZ27gFnjozPufVmDF8tp3buEeEkRTDZZIcJfoGoJFM=
+  - stage: deploy
+    script: skip
+    deploy:
+      provider: heroku
+      app: api-do-tasks
+      run:
+      - python do/cli.py migrate
+      api_key:
+        secure: fmzzIEE29F8VZ2CTUYQyJYv9mJi0GwIMxIQGgN3VrWQQo4Et+C4FPs1QUc0cNl4iietL2me7yDBVPUe2UEABOxYSc3qvNsgorinwsNQHJdCjfp1/QfpyJxRyJJ5VFkTgS8BP8tWjMSzUWTxAzM5x7CJpNpgb/4Erd/Tmf2YgfgFnz5AbXwn4PI04Y9ME/Fk0ct3ov1uhZS/P7sFKQqhazZ6rxsE+TN7jxl4nQlR5gCjLzZmu0nkljp597P1u9RlGELH3/8bJABwrdcoLdddQC080LQWIb2ruarlUmKq+o+TqnVIirFyYGM1LHYrgjqlVJgfpRcOWxjfEwJEmRxjlzMeo2ZOSIpadSNiB7WF5/LmX0l7ahj6aYmr1jURiDVUXW+J/KAX+5wvIwp4cSa3LYrfmvSs+LofniO4MBSL1jgVtlUuvlj7S9EZA9UQhryjM0QGuF1aJgCybe9Fo1kA9c9eP/veYNzfsT7x5Z76s7G87JYkntEvgjmxBEsFKzEzYe0KTEVCCjoSvjeIcLprWsR+/zMm/MDrOrahVG8B38Jl7ls8FD+GyztYLujR747YD34q5HX9E+Z/wLkPJ5rrZeHo19eVNg0J10PhdyDnKK6NCxuG21TNt0VP5wmsjHvDwEDELiLHtkOKb9lqEW5EnL9g/oV/lxc2SsQroN3P4ybs=
