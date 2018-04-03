@@ -7,12 +7,12 @@ from subprocess import run
 import click
 
 from helpers import load_settings
-from helpers.db import (apply_migrations, create_migrations, db_exists,
-                        delete_database)
+from helpers.db import apply_migrations, create_migrations
 from helpers.shell import success
 
 os.environ.setdefault('SETTINGS_MODULE', 'settings')
 settings = load_settings()
+database = settings.DATABASE_BACKEND
 
 OK = click.style('OK', fg='green')
 GUNICORN = ['gunicorn', '--reload', 'wsgi']
@@ -30,18 +30,6 @@ def start():
 
 
 @cli.command()
-def initdb():
-    """Create a database and apply migrations on it."""
-    name = settings.DATABASE_NAME
-    if db_exists(name):
-        raise click.UsageError(
-            click.style('Database {} already exists.'.format(name), fg='red')
-        )
-    if apply_migrations():
-        click.echo(OK)
-
-
-@cli.command()
 @click.argument('message')
 def makemigrations(message: str):
     """Generate migrations with Alembic."""
@@ -50,24 +38,32 @@ def makemigrations(message: str):
 
 
 @cli.command()
-def migrate():
-    """Run migrations using `alembic upgrade head`."""
-    if apply_migrations():
+def createdb():
+    """Create a database and apply migrations on it."""
+    if database.exists():
+        raise click.UsageError(
+            click.style('Database already exists at {}.'
+                        .format(database.url), fg='red')
+        )
+    else:
+        database.create()
         click.echo(OK)
 
 
 @cli.command()
-def rmdb():
-    """Delete the database altogether."""
-    name = settings.DATABASE_NAME
-    if db_exists(name):
-        click.confirm(
-            'This will erase the database permanently. Continue?',
-            abort=True)
-        if delete_database(name):
-            click.secho('Removed database {}'.format(name), fg='green')
-    else:
-        click.secho('No database found.', fg='red')
+def dropdb():
+    """Drop the database."""
+    message = 'This will permanently drop the database. Continue?'
+    if click.confirm(message, abort=True):
+        database.drop()
+        click.echo(OK)
+
+
+@cli.command()
+def migrate():
+    """Run migrations using `alembic upgrade head`."""
+    if apply_migrations():
+        click.echo(OK)
 
 
 @cli.command()

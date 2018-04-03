@@ -4,3 +4,5 @@ sqlalchemy
 gunicorn
 click
 pytest
+psycopg2
+sqlalchemy-utils

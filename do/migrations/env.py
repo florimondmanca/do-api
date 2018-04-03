@@ -45,7 +45,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = settings.DATABASE_URL
+    url = settings.DATABASE_BACKEND.url
     context.configure(
         url=url, target_metadata=target_metadata, literal_binds=True)
 
@@ -61,7 +61,7 @@ def run_migrations_online():
 
     """
     connectable = engine_from_config(
-        {'url': settings.DATABASE_URL},
+        {'url': settings.DATABASE_BACKEND.url},
         prefix='',
         poolclass=pool.NullPool)
 

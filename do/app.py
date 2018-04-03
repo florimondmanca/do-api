@@ -12,7 +12,7 @@ from middleware.sqlalchemy import SQLAlchemySessionManager
 def create(settings_module_name=None) -> falcon.API:
     """Create and return an app instance."""
     settings = load_settings(module_name=settings_module_name)
-    session_factory = get_session_factory(settings.DATABASE_URL)
+    session_factory = get_session_factory(settings.DATABASE_BACKEND.url)
 
     cors = CORS(
         allow_all_methods=True,

@@ -3,10 +3,10 @@ import os
 from datetime import datetime
 
 import pytest
+from falcon.testing import TestClient as Client
 
 from do import app
-from falcon.testing import TestClient as Client
-from helpers.db import apply_migrations, delete_database, get_session
+from helpers.db import apply_migrations
 from helpers.settings import load_settings
 
 
@@ -24,20 +24,22 @@ def settings():
         os.environ['SETTINGS_MODULE'] = previous
 
 
-@pytest.fixture(scope='module')
-def session(settings):
-    """Provide a module-scoped test database."""
+@pytest.fixture(scope='session')
+def database(settings):
+    """Provide a session-scoped test database."""
+    backend = settings.DATABASE_BACKEND
     print('Create test database...')
-    apply_migrations()
-
-    yield get_session(database_url=settings.DATABASE_URL)
-
-    print('Removing test database...')
-    delete_database(name=settings.DATABASE_NAME)
+    backend.create()
+    try:
+        apply_migrations()
+        yield
+    finally:
+        print('Drop test database...')
+        backend.drop()
 
 
 @pytest.fixture()
-def client(settings, session):
+def client(settings, database):
     """Setup and return a test client."""
     return Client(app.create())
 

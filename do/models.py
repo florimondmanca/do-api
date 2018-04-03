@@ -2,7 +2,7 @@
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, String, Integer, ForeignKey, TIMESTAMP, Boolean
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, Boolean
 
 
 Base = declarative_base()
@@ -38,7 +38,7 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True)
     title = Column(String(250), nullable=False)
-    due_date = Column(TIMESTAMP(timezone=True), nullable=True)
+    due_date = Column(DateTime(), nullable=True)
     completed = Column(Boolean, nullable=False, default=False)
     priority = Column(Integer, nullable=False, default=0)
     list_id = Column(Integer, ForeignKey('list.id'))

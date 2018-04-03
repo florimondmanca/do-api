@@ -1,28 +1,24 @@
-"""Database helpers."""
+"""Database utilities."""
 
-import os
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy_utils.functions import (create_database, database_exists,
+                                        drop_database)
 
+from helpers.shell import success
 from models import Base
-from .shell import success
-
 
 ALEMBIC_UPGRADE_HEAD = ['alembic', 'upgrade', 'head']
 ALEMBIC_GENERATE = ['alembic', 'revision', '--autogenerate']
 
 
-def get_session_factory(database_url: str):
+def get_session_factory(database_url: str) -> sessionmaker:
     """Create and return a session factory."""
-    engine = create_engine(database_url)
+    engine: Engine = create_engine(database_url)
     Base.metadata.bind = engine
     return sessionmaker(bind=engine)
-
-
-def get_session(database_url):
-    """Convenience shortcut to create and return a database session."""
-    factory = get_session_factory(database_url)
-    return factory()
 
 
 def create_migrations(message):
@@ -37,14 +33,16 @@ def apply_migrations():
     return success(ALEMBIC_UPGRADE_HEAD)
 
 
-def db_exists(name):
-    """Return whether a SQLite database with given name exists."""
-    return os.path.exists(name)
+class DatabaseBackend:
 
+    def __init__(self, settings):
+        self.url = make_url(settings.DATABASE_URL)
 
-def delete_database(name):
-    """Delete the SQLite database with given name.
+    def create(self):
+        create_database(self.url)
 
-    NOTE: does not check if the database actually exists.
-    """
-    return success(['rm', name])
+    def drop(self):
+        drop_database(self.url)
+
+    def exists(self):
+        return database_exists(self.url)

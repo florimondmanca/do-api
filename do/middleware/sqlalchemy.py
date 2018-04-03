@@ -22,4 +22,4 @@ class SQLAlchemySessionManager:
         if hasattr(resource, 'session'):
             if not req_succeeded:
                 resource.session.rollback()
-            self.scoped_session_factory.remove()
+        self.scoped_session_factory.remove()
