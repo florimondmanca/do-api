@@ -6,24 +6,20 @@ python:
 services:
   - postgresql
 
-stages:
-  - test
-  - name: deploy
-    if: branch = master
+before_script:
+  - cd do/
 
-jobs:
-  include:
+script:
+  # NOTE DATABASE_URL must be set in environment variables
+  - python cli.py test
 
-  - stage: test
-    before_script: cd do/
-    script: python cli.py test
+before_deploy:
+  - cd ..
 
-  - stage: deploy
-    script: skip
-    deploy:
-      provider: heroku
-      app: api-do-tasks
-      run:
-      - python do/cli.py migrate
-      api_key:
-        secure: fmzzIEE29F8VZ2CTUYQyJYv9mJi0GwIMxIQGgN3VrWQQo4Et+C4FPs1QUc0cNl4iietL2me7yDBVPUe2UEABOxYSc3qvNsgorinwsNQHJdCjfp1/QfpyJxRyJJ5VFkTgS8BP8tWjMSzUWTxAzM5x7CJpNpgb/4Erd/Tmf2YgfgFnz5AbXwn4PI04Y9ME/Fk0ct3ov1uhZS/P7sFKQqhazZ6rxsE+TN7jxl4nQlR5gCjLzZmu0nkljp597P1u9RlGELH3/8bJABwrdcoLdddQC080LQWIb2ruarlUmKq+o+TqnVIirFyYGM1LHYrgjqlVJgfpRcOWxjfEwJEmRxjlzMeo2ZOSIpadSNiB7WF5/LmX0l7ahj6aYmr1jURiDVUXW+J/KAX+5wvIwp4cSa3LYrfmvSs+LofniO4MBSL1jgVtlUuvlj7S9EZA9UQhryjM0QGuF1aJgCybe9Fo1kA9c9eP/veYNzfsT7x5Z76s7G87JYkntEvgjmxBEsFKzEzYe0KTEVCCjoSvjeIcLprWsR+/zMm/MDrOrahVG8B38Jl7ls8FD+GyztYLujR747YD34q5HX9E+Z/wLkPJ5rrZeHo19eVNg0J10PhdyDnKK6NCxuG21TNt0VP5wmsjHvDwEDELiLHtkOKb9lqEW5EnL9g/oV/lxc2SsQroN3P4ybs=
+deploy:
+  provider: heroku
+  app: api-do-tasks
+  run:
+  - cd do && python cli.py migrate
+  api_key:
+    secure: fmzzIEE29F8VZ2CTUYQyJYv9mJi0GwIMxIQGgN3VrWQQo4Et+C4FPs1QUc0cNl4iietL2me7yDBVPUe2UEABOxYSc3qvNsgorinwsNQHJdCjfp1/QfpyJxRyJJ5VFkTgS8BP8tWjMSzUWTxAzM5x7CJpNpgb/4Erd/Tmf2YgfgFnz5AbXwn4PI04Y9ME/Fk0ct3ov1uhZS/P7sFKQqhazZ6rxsE+TN7jxl4nQlR5gCjLzZmu0nkljp597P1u9RlGELH3/8bJABwrdcoLdddQC080LQWIb2ruarlUmKq+o+TqnVIirFyYGM1LHYrgjqlVJgfpRcOWxjfEwJEmRxjlzMeo2ZOSIpadSNiB7WF5/LmX0l7ahj6aYmr1jURiDVUXW+J/KAX+5wvIwp4cSa3LYrfmvSs+LofniO4MBSL1jgVtlUuvlj7S9EZA9UQhryjM0QGuF1aJgCybe9Fo1kA9c9eP/veYNzfsT7x5Z76s7G87JYkntEvgjmxBEsFKzEzYe0KTEVCCjoSvjeIcLprWsR+/zMm/MDrOrahVG8B38Jl7ls8FD+GyztYLujR747YD34q5HX9E+Z/wLkPJ5rrZeHo19eVNg0J10PhdyDnKK6NCxuG21TNt0VP5wmsjHvDwEDELiLHtkOKb9lqEW5EnL9g/oV/lxc2SsQroN3P4ybs=
