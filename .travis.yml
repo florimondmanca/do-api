@@ -7,12 +7,10 @@ services:
   - postgresql
 
 before_script:
-  # NOTE: the DATABASE_URL must be set in TravisCI environment variables
   - cd do/
-  - python cli.py createdb
-  - python cli.py migrate
 
 script:
+  # NOTE: the DATABASE_URL must be set in TravisCI environment variables
   - python cli.py test
 
 before_deploy:

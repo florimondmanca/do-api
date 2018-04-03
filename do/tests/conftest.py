@@ -28,8 +28,9 @@ def settings():
 def database(settings):
     """Provide a session-scoped test database."""
     backend = settings.DATABASE_BACKEND
-    print('Create test database...')
-    backend.create()
+    if not backend.exists():
+        print('Create test database...')
+        backend.create()
     try:
         apply_migrations()
         yield
