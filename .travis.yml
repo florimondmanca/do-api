@@ -6,6 +6,11 @@ python:
 services:
   - postgresql
 
+stages:
+  - test
+  - name: deploy
+    if: branch = master
+
 jobs:
   include:
 
