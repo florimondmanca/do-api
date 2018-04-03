@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 """Do API management CLI."""
 
+import sys
 import os
 from subprocess import run
 
@@ -35,6 +36,8 @@ def makemigrations(message: str):
     """Generate migrations with Alembic."""
     if create_migrations(message):
         click.echo(OK)
+    else:
+        sys.exit(1)
 
 
 @cli.command()
@@ -64,6 +67,8 @@ def migrate():
     """Run migrations using `alembic upgrade head`."""
     if apply_migrations():
         click.echo(OK)
+    else:
+        sys.exit(1)
 
 
 @cli.command()
@@ -73,6 +78,8 @@ def test(verbose):
     verbose_opts = verbose and ['-v'] or []
     if success(['python', '-m', 'pytest', *verbose_opts]):
         click.secho('Tests passed! 🎉', fg='green')
+    else:
+        sys.exit(1)
 
 
 if __name__ == '__main__':
